@@ -6,7 +6,15 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api/v1"
+      "url": "{protocol}://{host}/api/v1",
+      "variables": {
+        "protocol": {
+          "default": "http"
+        },
+        "host": {
+          "default": "localhost:3306"
+        }
+      }
     }
   ],
   "paths": {
