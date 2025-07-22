@@ -1,0 +1,179 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Google Keep Clone API",
+    "description": "Register, login, reset password and perform note CRUD operations."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1"
+    }
+  ],
+  "paths": {
+    "/users": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully" },
+          "400": { "description": "User already exists" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Login user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": { "description": "Invalid password" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/notes": {
+      "post": {
+        "tags": ["Notes"],
+        "summary": "Create note",
+        "security": [{ "JWT": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Note"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Note created" },
+          "500": { "description": "Error while creating note" }
+        }
+      },
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Get all notes for logged-in user",
+        "security": [{ "JWT": [] }],
+        "responses": {
+          "200": { "description": "Notes retrieved" }
+        }
+      }
+    },
+    "/notes/{noteId}": {
+      "get": {
+        "tags": ["Notes"],
+        "summary": "Get note by ID",
+        "security": [{ "JWT": [] }],
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Note retrieved" },
+          "404": { "description": "Note not found" }
+        }
+      },
+      "put": {
+        "tags": ["Notes"],
+        "summary": "Update note",
+        "security": [{ "JWT": [] }],
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Note"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Note updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Notes"],
+        "summary": "Delete note",
+        "security": [{ "JWT": [] }],
+        "parameters": [
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Note deleted" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "JWT": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["firstName", "lastName", "email", "password"]
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"]
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["title", "description"]
+      }
+    }
+  }
+}
