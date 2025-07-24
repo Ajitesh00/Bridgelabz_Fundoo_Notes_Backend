@@ -31,4 +31,10 @@ router.put('/:id/pin', userAuth, noteController.pinNote);
 // Route to set or unset a reminder for a note
 router.put('/:id/reminder', userAuth, noteController.setReminder);
 
+// Route to add a label to a note
+router.post('/:id/labels', userAuth, noteController.addLabel);
+
+// Route to remove a label from a note
+router.delete('/:id/labels', userAuth, noteController.removeLabel);
+
 export default router;

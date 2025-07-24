@@ -53,6 +53,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true
       },
+      labels: {
+        type: DataTypes.JSON,
+        allowNull: true // Changed to allow NULL
+      },
       createdBy: {
         type: DataTypes.INTEGER,
         allowNull: false

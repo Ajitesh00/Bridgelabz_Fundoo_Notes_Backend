@@ -245,7 +245,7 @@ export const archiveNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.message // Use service's message
+      message: serviceResponse.message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -263,7 +263,7 @@ export const trashNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.message // Use service's message
+      message: serviceResponse.message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -281,7 +281,7 @@ export const pinNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.message // Use service's message
+      message: serviceResponse.message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -299,7 +299,7 @@ export const setReminder = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.message // Use service's message
+      message: serviceResponse.message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -308,4 +308,40 @@ export const setReminder = async (req, res, next) => {
       message: error.message || 'Failed to set/unset reminder'
     });
   }
-};  
+};
+
+// Add a label to a note
+export const addLabel = async (req, res, next) => {
+  try {
+    const serviceResponse = await NoteService.addLabel(req.params.id, req.body.name);
+    res.status(HttpStatus.OK).json({
+      code: HttpStatus.OK,
+      data: serviceResponse.data,
+      message: 'Label added successfully'
+    });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      code: error.code || 500,
+      data: {},
+      message: error.message || 'Failed to add label'
+    });
+  }
+};
+
+// Remove a label from a note
+export const removeLabel = async (req, res, next) => {
+  try {
+    const serviceResponse = await NoteService.removeLabel(req.params.id, req.body.name);
+    res.status(HttpStatus.OK).json({
+      code: HttpStatus.OK,
+      data: serviceResponse.data,
+      message: 'Label removed successfully'
+    });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      code: error.code || 500,
+      data: {},
+      message: error.message || 'Failed to remove label'
+    });
+  }
+};

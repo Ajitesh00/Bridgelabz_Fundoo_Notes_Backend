@@ -6,10 +6,15 @@ const Note = require('../models/note')(sequelize, DataTypes);
 export const getAllNotes = async (userId) => {
   try {
     const notes = await Note.findAll({ where: { createdBy: userId } });
+    // Ensure labels is an array for each note
+    const normalizedNotes = notes.map(note => ({
+      ...note.toJSON(),
+      labels: note.labels || []
+    }));
     return {
       code: 200,
       message: 'Notes retrieved successfully',
-      data: notes
+      data: normalizedNotes
     };
   } catch (error) {
     console.error('Error in getAllNotes:', error);
@@ -32,10 +37,15 @@ export const getNoteById = async (noteId) => {
         data: {}
       };
     }
+    // Ensure labels is an array
+    const normalizedNote = {
+      ...note.toJSON(),
+      labels: note.labels || []
+    };
     return {
       code: 200,
       message: 'Note retrieved successfully',
-      data: note
+      data: normalizedNote
     };
   } catch (error) {
     console.error('Error in getNoteById:', error);
@@ -50,7 +60,7 @@ export const getNoteById = async (noteId) => {
 // Add a new note
 export const addNote = async (noteBody, userId) => {
   try {
-    const { title, description, color, hasReminder, reminderDateTime, hasCollaborator, collaboratorEmail } = noteBody;
+    const { title, description, color, hasReminder, reminderDateTime, hasCollaborator, collaboratorEmail, labels } = noteBody;
     const user = await User.findByPk(userId);
     if (!user) {
       return {
@@ -67,16 +77,17 @@ export const addNote = async (noteBody, userId) => {
       isArchived: false,
       isTrash: false,
       hasReminder: hasReminder || false,
-      reminderDateTime: reminderDateTime || null,
+      reminderDateTime: hasReminder ? reminderDateTime || null : null,
       hasCollaborator: hasCollaborator || false,
       collaboratorEmail: hasCollaborator ? collaboratorEmail || '' : null,
+      labels: labels || null, // Store as NULL if no labels provided
       createdBy: userId
     });
     const createdNote = await Note.findByPk(note.id);
     return {
       code: 201,
       message: 'Note created successfully',
-      data: createdNote
+      data: { ...createdNote.toJSON(), labels: createdNote.labels || [] }
     };
   } catch (error) {
     console.error('Error in addNote:', error);
@@ -101,12 +112,13 @@ export const updateNote = async (noteId, noteBody) => {
     }
     await note.update({
       ...noteBody,
-      collaboratorEmail: noteBody.hasCollaborator ? noteBody.collaboratorEmail || note.collaboratorEmail : null
+      collaboratorEmail: noteBody.hasCollaborator ? noteBody.collaboratorEmail || note.collaboratorEmail : null,
+      labels: noteBody.labels !== undefined ? noteBody.labels : note.labels // Preserve existing labels if not provided
     });
     return {
       code: 200,
       message: 'Note updated successfully',
-      data: note
+      data: { ...note.toJSON(), labels: note.labels || [] }
     };
   } catch (error) {
     console.error('Error in updateNote:', error);
@@ -164,7 +176,7 @@ export const archiveNote = async (noteId) => {
     return {
       code: 200,
       message: note.isArchived ? 'Note archived successfully' : 'Note unarchived successfully',
-      data: note
+      data: { ...note.toJSON(), labels: note.labels || [] }
     };
   } catch (error) {
     console.error('Error in archiveNote:', error);
@@ -195,7 +207,7 @@ export const trashNote = async (noteId) => {
     return {
       code: 200,
       message: note.isTrash ? 'Note moved to trash successfully' : 'Note restored successfully',
-      data: note
+      data: { ...note.toJSON(), labels: note.labels || [] }
     };
   } catch (error) {
     console.error('Error in trashNote:', error);
@@ -225,7 +237,7 @@ export const pinNote = async (noteId) => {
     return {
       code: 200,
       message: note.isPinned ? 'Note pinned successfully' : 'Note unpinned successfully',
-      data: note
+      data: { ...note.toJSON(), labels: note.labels || [] }
     };
   } catch (error) {
     console.error('Error in pinNote:', error);
@@ -257,13 +269,98 @@ export const setReminder = async (noteId, reminderBody) => {
     return {
       code: 200,
       message: note.hasReminder ? 'Reminder set successfully' : 'Reminder unset successfully',
-      data: note
+      data: { ...note.toJSON(), labels: note.labels || [] }
     };
   } catch (error) {
     console.error('Error in setReminder:', error);
     return {
       code: error.code || 500,
       message: error.message || 'Failed to set/unset reminder',
+      data: {}
+    };
+  }
+};
+
+// Add a label to a note
+export const addLabel = async (noteId, labelName) => {
+  try {
+    const note = await Note.findByPk(noteId);
+    if (!note) {
+      return {
+        code: 404,
+        message: 'Note not found',
+        data: {}
+      };
+    }
+    if (!labelName || labelName.trim().length === 0) {
+      return {
+        code: 400,
+        message: 'Label name cannot be empty',
+        data: {}
+      };
+    }
+    const labels = note.labels || [];
+    if (labels.includes(labelName)) {
+      return {
+        code: 400,
+        message: 'Label already exists on note',
+        data: { ...note.toJSON(), labels }
+      };
+    }
+    labels.push(labelName);
+    await note.update({ labels });
+    return {
+      code: 200,
+      message: 'Label added successfully',
+      data: { ...note.toJSON(), labels }
+    };
+  } catch (error) {
+    console.error('Error in addLabel:', error);
+    return {
+      code: error.code || 500,
+      message: error.message || 'Failed to add label',
+      data: {}
+    };
+  }
+};
+
+// Remove a label from a note
+export const removeLabel = async (noteId, labelName) => {
+  try {
+    const note = await Note.findByPk(noteId);
+    if (!note) {
+      return {
+        code: 404,
+        message: 'Note not found',
+        data: {}
+      };
+    }
+    let updatedLabels = note.labels || [];
+    if (labelName) {
+      // Remove specific label
+      if (!updatedLabels.includes(labelName)) {
+        return {
+          code: 400,
+          message: 'Label not found on note',
+          data: { ...note.toJSON(), labels: updatedLabels }
+        };
+      }
+      updatedLabels = updatedLabels.filter((label) => label !== labelName);
+    } else {
+      // Clear all labels
+      updatedLabels = [];
+    }
+    await note.update({ labels: updatedLabels });
+    return {
+      code: 200,
+      message: 'Labels removed successfully',
+      data: { ...note.toJSON(), labels: updatedLabels }
+    };
+  } catch (error) {
+    console.error('Error in removeLabel:', error);
+    return {
+      code: error.code || 500,
+      message: error.message || 'Failed to remove labels',
       data: {}
     };
   }
