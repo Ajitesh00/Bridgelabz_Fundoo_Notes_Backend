@@ -345,3 +345,21 @@ export const removeLabel = async (req, res, next) => {
     });
   }
 };
+
+// Set or unset a collaborator for a note
+export const setCollaborator = async (req, res, next) => {
+  try {
+    const serviceResponse = await NoteService.setCollaborator(req.params.id, req.body);
+    res.status(HttpStatus.OK).json({
+      code: HttpStatus.OK,
+      data: serviceResponse.data,
+      message: serviceResponse.message
+    });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      code: error.code || 500,
+      data: {},
+      message: error.message || 'Failed to set/unset collaborator'
+    });
+  }
+};

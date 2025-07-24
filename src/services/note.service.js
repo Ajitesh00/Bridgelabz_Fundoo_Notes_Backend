@@ -6,7 +6,6 @@ const Note = require('../models/note')(sequelize, DataTypes);
 export const getAllNotes = async (userId) => {
   try {
     const notes = await Note.findAll({ where: { createdBy: userId } });
-    // Ensure labels is an array for each note
     const normalizedNotes = notes.map(note => ({
       ...note.toJSON(),
       labels: note.labels || []
@@ -37,7 +36,6 @@ export const getNoteById = async (noteId) => {
         data: {}
       };
     }
-    // Ensure labels is an array
     const normalizedNote = {
       ...note.toJSON(),
       labels: note.labels || []
@@ -79,8 +77,8 @@ export const addNote = async (noteBody, userId) => {
       hasReminder: hasReminder || false,
       reminderDateTime: hasReminder ? reminderDateTime || null : null,
       hasCollaborator: hasCollaborator || false,
-      collaboratorEmail: hasCollaborator ? collaboratorEmail || '' : null,
-      labels: labels || null, // Store as NULL if no labels provided
+      collaboratorEmail: hasCollaborator ? collaboratorEmail || null : null,
+      labels: labels || null,
       createdBy: userId
     });
     const createdNote = await Note.findByPk(note.id);
@@ -112,8 +110,9 @@ export const updateNote = async (noteId, noteBody) => {
     }
     await note.update({
       ...noteBody,
-      collaboratorEmail: noteBody.hasCollaborator ? noteBody.collaboratorEmail || note.collaboratorEmail : null,
-      labels: noteBody.labels !== undefined ? noteBody.labels : note.labels // Preserve existing labels if not provided
+      hasCollaborator: noteBody.hasCollaborator !== undefined ? noteBody.hasCollaborator : note.hasCollaborator,
+      collaboratorEmail: noteBody.hasCollaborator ? noteBody.collaboratorEmail || null : null,
+      labels: noteBody.labels !== undefined ? noteBody.labels : note.labels
     });
     return {
       code: 200,
@@ -361,6 +360,38 @@ export const removeLabel = async (noteId, labelName) => {
     return {
       code: error.code || 500,
       message: error.message || 'Failed to remove labels',
+      data: {}
+    };
+  }
+};
+
+// Set or unset a collaborator for a note by ID
+export const setCollaborator = async (noteId, collaboratorBody) => {
+  try {
+    const note = await Note.findByPk(noteId);
+    if (!note) {
+      return {
+        code: 404,
+        message: 'Note not found',
+        data: {}
+      };
+    }
+    const { hasCollaborator, collaboratorEmail } = collaboratorBody;
+    await note.update({
+      hasCollaborator: hasCollaborator !== undefined ? hasCollaborator : note.hasCollaborator,
+      collaboratorEmail: hasCollaborator ? collaboratorEmail || null : null
+    });
+    await note.reload();
+    return {
+      code: 200,
+      message: note.hasCollaborator ? 'Collaborator set successfully' : 'Collaborator unset successfully',
+      data: { ...note.toJSON(), labels: note.labels || [] }
+    };
+  } catch (error) {
+    console.error('Error in setCollaborator:', error);
+    return {
+      code: error.code || 500,
+      message: error.message || 'Failed to set/unset collaborator',
       data: {}
     };
   }

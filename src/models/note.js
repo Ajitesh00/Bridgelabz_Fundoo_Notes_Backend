@@ -23,7 +23,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false
       },
-      description: DataTypes.STRING,
+      description: {
+        type: DataTypes.STRING
+      },
       color: {
         type: DataTypes.STRING,
         defaultValue: 'default',
@@ -53,9 +55,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true
       },
+      hasCollaborator: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+      },
+      collaboratorEmail: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
       labels: {
         type: DataTypes.JSON,
-        allowNull: true // Changed to allow NULL
+        allowNull: true
       },
       createdBy: {
         type: DataTypes.INTEGER,

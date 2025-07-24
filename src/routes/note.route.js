@@ -37,4 +37,7 @@ router.post('/:id/labels', userAuth, noteController.addLabel);
 // Route to remove a label from a note
 router.delete('/:id/labels', userAuth, noteController.removeLabel);
 
+// Route to set or unset a collaborator for a note
+router.put('/:id/collaborator', userAuth, noteController.setCollaborator);
+
 export default router;
