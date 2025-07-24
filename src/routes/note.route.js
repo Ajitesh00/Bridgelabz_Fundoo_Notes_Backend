@@ -28,4 +28,7 @@ router.put('/:id/trash', userAuth, noteController.trashNote);
 // Route to pin or unpin a note
 router.put('/:id/pin', userAuth, noteController.pinNote);
 
+// Route to set or unset a reminder for a note
+router.put('/:id/reminder', userAuth, noteController.setReminder);
+
 export default router;

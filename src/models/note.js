@@ -44,6 +44,15 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: false,
         allowNull: false
       },
+      hasReminder: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+      },
+      reminderDateTime: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
       createdBy: {
         type: DataTypes.INTEGER,
         allowNull: false

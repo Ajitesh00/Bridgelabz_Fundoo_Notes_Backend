@@ -154,7 +154,7 @@ export const getAllNotes = async (req, res, next) => {
     const serviceResponse = await NoteService.getAllNotes(req.user.id);
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
-      data: serviceResponse.data, // Use serviceResponse.data directly
+      data: serviceResponse.data,
       message: 'Notes fetched successfully'
     });
   } catch (error) {
@@ -245,7 +245,7 @@ export const archiveNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.data.isArchived ? 'Note unarchived successfully' : 'Note archived successfully'
+      message: serviceResponse.message // Use service's message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -263,7 +263,7 @@ export const trashNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.data.isTrash ? 'Note restored successfully' : 'Note moved to trash successfully'
+      message: serviceResponse.message // Use service's message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -281,7 +281,7 @@ export const pinNote = async (req, res, next) => {
     res.status(HttpStatus.OK).json({
       code: HttpStatus.OK,
       data: serviceResponse.data,
-      message: serviceResponse.data.isPinned ? 'Note unpinned successfully' : 'Note pinned successfully'
+      message: serviceResponse.message // Use service's message
     });
   } catch (error) {
     res.status(error.code || 500).json({
@@ -291,3 +291,21 @@ export const pinNote = async (req, res, next) => {
     });
   }
 };
+
+// Set or unset reminder for a note
+export const setReminder = async (req, res, next) => {
+  try {
+    const serviceResponse = await NoteService.setReminder(req.params.id, req.body);
+    res.status(HttpStatus.OK).json({
+      code: HttpStatus.OK,
+      data: serviceResponse.data,
+      message: serviceResponse.message // Use service's message
+    });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      code: error.code || 500,
+      data: {},
+      message: error.message || 'Failed to set/unset reminder'
+    });
+  }
+};  

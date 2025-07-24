@@ -50,7 +50,7 @@ export const getNoteById = async (noteId) => {
 // Add a new note
 export const addNote = async (noteBody, userId) => {
   try {
-    const { title, description, color } = noteBody;
+    const { title, description, color, hasReminder, reminderDateTime, hasCollaborator, collaboratorEmail } = noteBody;
     const user = await User.findByPk(userId);
     if (!user) {
       return {
@@ -66,9 +66,12 @@ export const addNote = async (noteBody, userId) => {
       isPinned: false,
       isArchived: false,
       isTrash: false,
+      hasReminder: hasReminder || false,
+      reminderDateTime: reminderDateTime || null,
+      hasCollaborator: hasCollaborator || false,
+      collaboratorEmail: hasCollaborator ? collaboratorEmail || '' : null,
       createdBy: userId
     });
-    // Fetch the note to ensure all fields are included
     const createdNote = await Note.findByPk(note.id);
     return {
       code: 201,
@@ -96,7 +99,10 @@ export const updateNote = async (noteId, noteBody) => {
         data: {}
       };
     }
-    await note.update(noteBody);
+    await note.update({
+      ...noteBody,
+      collaboratorEmail: noteBody.hasCollaborator ? noteBody.collaboratorEmail || note.collaboratorEmail : null
+    });
     return {
       code: 200,
       message: 'Note updated successfully',
@@ -154,9 +160,10 @@ export const archiveNote = async (noteId) => {
       isArchived: !note.isArchived,
       isTrash: false
     });
+    await note.reload();
     return {
       code: 200,
-      message: note.isArchived ? 'Note unarchived successfully' : 'Note archived successfully',
+      message: note.isArchived ? 'Note archived successfully' : 'Note unarchived successfully',
       data: note
     };
   } catch (error) {
@@ -184,9 +191,10 @@ export const trashNote = async (noteId) => {
       isTrash: !note.isTrash,
       isArchived: false
     });
+    await note.reload();
     return {
       code: 200,
-      message: note.isTrash ? 'Note restored successfully' : 'Note moved to trash successfully',
+      message: note.isTrash ? 'Note moved to trash successfully' : 'Note restored successfully',
       data: note
     };
   } catch (error) {
@@ -213,9 +221,10 @@ export const pinNote = async (noteId) => {
     await note.update({
       isPinned: !note.isPinned
     });
+    await note.reload();
     return {
       code: 200,
-      message: note.isPinned ? 'Note unpinned successfully' : 'Note pinned successfully',
+      message: note.isPinned ? 'Note pinned successfully' : 'Note unpinned successfully',
       data: note
     };
   } catch (error) {
@@ -223,6 +232,38 @@ export const pinNote = async (noteId) => {
     return {
       code: error.code || 500,
       message: error.message || 'Failed to pin/unpin note',
+      data: {}
+    };
+  }
+};
+
+// Set or unset a reminder for a note by ID
+export const setReminder = async (noteId, reminderBody) => {
+  try {
+    const note = await Note.findByPk(noteId);
+    if (!note) {
+      return {
+        code: 404,
+        message: 'Note not found',
+        data: {}
+      };
+    }
+    const { hasReminder, reminderDateTime } = reminderBody;
+    await note.update({
+      hasReminder: hasReminder !== undefined ? hasReminder : note.hasReminder,
+      reminderDateTime: hasReminder ? reminderDateTime : null
+    });
+    await note.reload();
+    return {
+      code: 200,
+      message: note.hasReminder ? 'Reminder set successfully' : 'Reminder unset successfully',
+      data: note
+    };
+  } catch (error) {
+    console.error('Error in setReminder:', error);
+    return {
+      code: error.code || 500,
+      message: error.message || 'Failed to set/unset reminder',
       data: {}
     };
   }
